@@ -1,0 +1,67 @@
+prefix: san_sgd
+verbose: True
+mode: 'train'
+save_dir: 'scratch/vqa/san_sgd_0.01'
+use_gpu: True
+debug: False
+seed: 123213
+data:
+    preprocess: False
+    dir: './vqadata'
+    train:
+        ques: 'Questions_Train_abstract_v002/MultipleChoice_abstract_v002_train2015_questions.json'
+        ans: 'abstract_v002_train2015_annotations.json'
+        img_dir: 'scene_img_abstract_v002_train2015'
+        emb_dir: 'train2014_san_i_1024_448_vgg'
+        batch_size: 20
+    val:
+        ques: 'Questions_Val_abstract_v002/MultipleChoice_abstract_v002_val2015_questions.json'
+        ans: 'abstract_v002_val2015_annotations.json'
+        img_dir: 'scene_img_abstract_v002_val2017'
+        emb_dir: 'train2014_san_i_1024_448_vgg'
+        batch_size: 4
+    images:
+        preprocess: True
+        scale: [448,448]
+        crop: 448
+    loader: 
+        workers: 4
+        pin_memory: True
+
+model:
+    type: san
+    params:
+        word_emb_size: 300
+        emb_size: 1024
+        # ques_channel_type: 'DEEPLSTM'
+        att_ff_size: 512
+        num_att_layers: 1
+    reload: 'checkpoints.pth.tar'
+
+optim:
+    class: sgd      #sgd/rmsprop/adam
+    scheduler: 'CustomReduceLROnPlateau'
+    scheduler_params:
+        maxPatienceToStopTraining: 16
+        base_class_params:
+            mode: 'min'
+            factor: 0.5
+            patience: 7
+            verbose: True 
+            threshold: 0.02 
+            threshold_mode: 'rel' 
+            cooldown: 0 
+            min_lr: 0.00001
+            eps: 0.000001
+
+    params: 
+        momentum: 0.9
+        lr: 0.01      # learning rate
+        # alpha: 0.99     # alpha for adagrad/rmsprop/momentum/adam
+        # beta: 0.995     # beta used for adam
+        # eps: 0.00001       # epsilon that goes into denominator in rmsprop
+        weight_decay: 0.0005
+
+training:
+    no_of_epochs: 100
+    start_from_checkpoint: True
